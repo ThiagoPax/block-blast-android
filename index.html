@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Jogo estilo Block Blast / 1010! para jogar direto no navegador." />
+  <meta name="description" content="Tetris do Thiago: blocos 8x8 com manchetes, cores dinâmicas e som de marco de pontos." />
   <meta name="theme-color" content="#111827" />
-  <title>Block Blast Web</title>
+  <title>Tetris do Thiago</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,8 +20,8 @@
 
     <div id="headline" aria-live="polite"></div>
 
-      <main>
-        <section class="board" id="board" aria-label="Tabuleiro 8x8"></section>
+    <main>
+      <section class="board" id="board" aria-label="Tabuleiro 8x8"></section>
       <section class="pieces" aria-label="Peças disponíveis">
         <div class="pieces-title">Escolha e arraste uma peça</div>
         <div id="piece-container" class="piece-container"></div>
@@ -32,9 +32,18 @@
       <div class="game-over-card">
         <h2>Game Over</h2>
         <p id="final-score">Você fez 0 pontos.</p>
+        <p class="best-score">Melhor: <span id="final-best-score">0</span></p>
         <button id="play-again" type="button">Jogar de novo</button>
       </div>
     </div>
+    <div id="start-overlay" class="overlay">
+      <div class="start-card">
+        <h1>Tetris do Thiago</h1>
+        <p>Arraste as peças no tabuleiro 8x8, limpe linhas e bata seus recordes com cores e manchetes animadas.</p>
+        <button id="start-button" class="primary-btn" type="button">Iniciar</button>
+      </div>
+    </div>
+    <div id="headline-overlay" aria-live="polite"></div>
     </div>
 
     <audio id="clear-sound" src="clear-sound.mp3" preload="auto"></audio>
