@@ -6,8 +6,10 @@ const restartBtn = document.getElementById('restart');
 const gameOverEl = document.getElementById('game-over');
 const finalScoreEl = document.getElementById('final-score');
 const playAgainBtn = document.getElementById('play-again');
+const clearSound = document.getElementById('clear-sound');
+const headlineEl = document.getElementById('headline');
 
-const BOARD_SIZE = 10;
+const BOARD_SIZE = 8;
 const EMPTY = 0;
 const FILLED = 1;
 const SHAPES = [
@@ -31,6 +33,7 @@ let currentPieces = [];
 let score = 0;
 let bestScore = 0;
 let draggingPiece = null;
+const HEADLINES = ['Fantástico!', 'Incrível!', 'Espetacular!', 'Sensacional!', 'Show!', 'Maravilhoso!'];
 
 function createBoard() {
   boardEl.innerHTML = '';
@@ -122,7 +125,18 @@ function addDragEvents(element, piece) {
     }
   });
 
+  element.addEventListener('pointerleave', () => {
+    if (!draggingPiece) return;
+    clearPreview();
+  });
+
+  element.addEventListener('pointercancel', () => {
+    draggingPiece = null;
+    clearPreview();
+  });
+
   element.addEventListener('pointerup', (event) => {
+    if (!draggingPiece) return;
     const boardRect = boardEl.getBoundingClientRect();
     const x = event.clientX - boardRect.left;
     const y = event.clientY - boardRect.top;
@@ -171,22 +185,88 @@ function placePiece(row, col, shape) {
 
 function clearPreview() {
   Array.from(boardEl.children).forEach((cell) => {
-    cell.classList.remove('preview-valid', 'preview-invalid');
+    cell.classList.remove('preview-valid', 'preview-invalid', 'preview-clear');
   });
 }
 
 function highlightPreview(cells) {
   const valid = isPlacementValid(cells);
+  if (!valid) {
+    cells.forEach(({ row, col }) => {
+      if (row < 0 || col < 0 || row >= BOARD_SIZE || col >= BOARD_SIZE) return;
+      const cell = boardEl.children[row * BOARD_SIZE + col];
+      cell.classList.add('preview-invalid');
+    });
+    return;
+  }
+
   cells.forEach(({ row, col }) => {
-    if (row < 0 || col < 0 || row >= BOARD_SIZE || col >= BOARD_SIZE) return;
     const cell = boardEl.children[row * BOARD_SIZE + col];
-    cell.classList.add(valid ? 'preview-valid' : 'preview-invalid');
+    cell.classList.add('preview-valid');
+  });
+
+  const { rows, cols } = getLinesToClear(cells);
+  highlightClearPreview(rows, cols);
+}
+
+function getLinesToClear(cells) {
+  const cellSet = new Set(cells.map(({ row, col }) => `${row}-${col}`));
+  const rows = [];
+  const cols = [];
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    const isCandidateRow = cells.some((cell) => cell.row === r);
+    if (!isCandidateRow) continue;
+    let full = true;
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] === EMPTY && !cellSet.has(`${r}-${c}`)) {
+        full = false;
+        break;
+      }
+    }
+    if (full) rows.push(r);
+  }
+
+  for (let c = 0; c < BOARD_SIZE; c++) {
+    const isCandidateCol = cells.some((cell) => cell.col === c);
+    if (!isCandidateCol) continue;
+    let full = true;
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      if (board[r][c] === EMPTY && !cellSet.has(`${r}-${c}`)) {
+        full = false;
+        break;
+      }
+    }
+    if (full) cols.push(c);
+  }
+
+  return { rows, cols };
+}
+
+function highlightClearPreview(rows, cols) {
+  rows.forEach((r) => {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const cell = boardEl.children[r * BOARD_SIZE + c];
+      cell.classList.add('preview-clear');
+    }
+  });
+
+  cols.forEach((c) => {
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      const cell = boardEl.children[r * BOARD_SIZE + c];
+      cell.classList.add('preview-clear');
+    }
   });
 }
 
 function afterPlacement(blocksPlaced) {
-  const lines = clearCompletedLines();
+  const clearResult = clearCompletedLines();
+  const lines = clearResult.clearedRows.length + clearResult.clearedCols.length;
   const gained = blocksPlaced + lines * 10;
+  if (lines > 0) {
+    playClearSound();
+    showHeadline();
+  }
   updateScore(gained);
   if (currentPieces.every((p) => p === null)) {
     spawnPieces();
@@ -222,7 +302,7 @@ function clearCompletedLines() {
     }
   });
 
-  return filledRows.length + filledCols.length;
+  return { clearedRows: filledRows, clearedCols: filledCols };
 }
 
 function checkGameOver() {
@@ -244,6 +324,23 @@ function pieceFits(shape) {
 function showGameOver() {
   finalScoreEl.textContent = `Você fez ${score} pontos.`;
   gameOverEl.classList.remove('hidden');
+}
+
+function playClearSound() {
+  if (!clearSound) return;
+  clearSound.currentTime = 0;
+  clearSound.play();
+}
+
+function showHeadline() {
+  if (!headlineEl) return;
+  const text = HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
+  headlineEl.textContent = text;
+  headlineEl.classList.remove('headline-animate');
+  // Force reflow to restart animation
+  // eslint-disable-next-line no-unused-expressions
+  headlineEl.offsetWidth;
+  headlineEl.classList.add('headline-animate');
 }
 
 function resetGame() {
