@@ -3,37 +3,98 @@ const pieceContainer = document.getElementById('piece-container');
 const scoreEl = document.getElementById('score');
 const bestScoreEl = document.getElementById('best-score');
 const restartBtn = document.getElementById('restart');
+const startOverlay = document.getElementById('start-overlay');
+const startButton = document.getElementById('start-button');
 const gameOverEl = document.getElementById('game-over');
 const finalScoreEl = document.getElementById('final-score');
+const finalBestScoreEl = document.getElementById('final-best-score');
 const playAgainBtn = document.getElementById('play-again');
 const clearSound = document.getElementById('clear-sound');
 const headlineEl = document.getElementById('headline');
+const headlineOverlay = document.getElementById('headline-overlay');
 
 const BOARD_SIZE = 8;
 const EMPTY = 0;
 const FILLED = 1;
+const BLOCK_VALUE = 1;
+const LINE_CLEAR_BASE = 10;
+const ALL_CLEAR_BONUS = 1000;
+const HEADLINES = ['Fantástico!', 'Incrível!', 'Espetacular!', 'Sensacional!', 'Show!', 'Maravilhoso!'];
+const ALL_CLEAR_HEADLINES = ['Tela limpa!', 'All clear!', 'Quadro vazio!', 'Perfeito!'];
+const THEMES = [
+  {
+    bg: 'radial-gradient(circle at 20% 20%, #1f2937, #0b1224 45%)',
+    panel: '#111827',
+    grid: '#1f2937',
+    cell: '#334155',
+    block: 'linear-gradient(145deg, #f59e0b, #b45309)',
+    accent: '#f59e0b',
+  },
+  {
+    bg: 'radial-gradient(circle at 10% 30%, #0f172a, #111827 45%, #0b1224)',
+    panel: '#0f172a',
+    grid: '#1e293b',
+    cell: '#2c3e50',
+    block: 'linear-gradient(145deg, #38bdf8, #0ea5e9)',
+    accent: '#38bdf8',
+  },
+  {
+    bg: 'radial-gradient(circle at 80% 10%, #172554, #0b1224 50%, #111827)',
+    panel: '#0b1224',
+    grid: '#1b2a4a',
+    cell: '#243b53',
+    block: 'linear-gradient(145deg, #22c55e, #15803d)',
+    accent: '#22c55e',
+  },
+];
 const SHAPES = [
-  [[0, 0]],
+  // Linhas horizontais
+  [[0, 0], [0, 1]],
+  [[0, 0], [0, 1], [0, 2]],
+  [[0, 0], [0, 1], [0, 2], [0, 3]],
+  [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
+  // Linhas verticais
   [[0, 0], [1, 0]],
   [[0, 0], [1, 0], [2, 0]],
   [[0, 0], [1, 0], [2, 0], [3, 0]],
   [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]],
+  // Quadrados
   [[0, 0], [0, 1], [1, 0], [1, 1]],
-  [[0, 0], [0, 1], [0, 2]],
-  [[0, 0], [0, 1], [0, 2], [0, 3]],
-  [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
-  [[0, 0], [1, 0], [0, 1]],
-  [[0, 0], [1, 0], [2, 0], [0, 1]],
-  [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1]],
-  [[0, 0], [1, 0], [0, 1], [1, 1], [2, 1]],
+  // Retângulos 3x2 e 2x3
+  [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]],
+  [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
+  // Bloco 3x3
+  [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+  // Formas L pequenas
+  [[0, 0], [1, 0], [2, 0], [2, 1]],
+  [[0, 1], [1, 1], [2, 1], [2, 0]],
+  [[0, 0], [0, 1], [0, 2], [1, 0]],
+  [[0, 0], [0, 1], [0, 2], [1, 2]],
+  // Formas L maiores
+  [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1]],
+  [[0, 1], [1, 1], [2, 1], [3, 1], [3, 0]],
+  [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0]],
+  [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3]],
+  // Formas T
+  [[0, 0], [0, 1], [0, 2], [1, 1]],
+  [[0, 1], [1, 0], [1, 1], [1, 2]],
+  [[0, 1], [1, 0], [1, 1], [2, 1]],
+  [[0, 0], [1, 0], [1, 1], [2, 0]],
+  // Outras formas
+  [[0, 0], [1, 0], [1, 1], [2, 1]],
+  [[0, 1], [1, 1], [1, 0], [2, 0]],
+  [[0, 0], [0, 1], [1, 1], [1, 2], [2, 2]],
+  [[0, 2], [0, 1], [1, 1], [1, 0], [2, 0]],
 ];
 
 let board = [];
 let currentPieces = [];
 let score = 0;
 let bestScore = 0;
+let previousMilestone = 0;
+let themeIndex = 0;
 let draggingPiece = null;
-const HEADLINES = ['Fantástico!', 'Incrível!', 'Espetacular!', 'Sensacional!', 'Show!', 'Maravilhoso!'];
+let gameStarted = false;
 
 function createBoard() {
   boardEl.innerHTML = '';
@@ -63,14 +124,35 @@ function saveBestScore() {
   }
 }
 
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.style.setProperty('--bg', theme.bg);
+  root.style.setProperty('--panel', theme.panel);
+  root.style.setProperty('--grid', theme.grid);
+  root.style.setProperty('--cell', theme.cell);
+  root.style.setProperty('--accent', theme.accent);
+  root.style.setProperty('--block', theme.block);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute('content', theme.panel);
+  }
+}
+
 function updateScore(points) {
+  const previousScore = score;
   score += points;
   scoreEl.textContent = score;
   saveBestScore();
+  handleMilestone(previousScore, score);
 }
 
+let shapeBag = [];
 function randomPiece() {
-  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+  if (shapeBag.length === 0) {
+    shapeBag = [...SHAPES];
+  }
+  const index = Math.floor(Math.random() * shapeBag.length);
+  const shape = shapeBag.splice(index, 1)[0];
   return { shape };
 }
 
@@ -106,6 +188,7 @@ function renderPieces() {
 
 function addDragEvents(element, piece) {
   element.addEventListener('pointerdown', (event) => {
+    if (!gameStarted || !piece) return;
     event.preventDefault();
     draggingPiece = piece;
     element.classList.add('board-highlight');
@@ -132,6 +215,7 @@ function addDragEvents(element, piece) {
 
   element.addEventListener('pointercancel', () => {
     draggingPiece = null;
+    element.classList.remove('board-highlight');
     clearPreview();
   });
 
@@ -206,7 +290,9 @@ function highlightPreview(cells) {
   });
 
   const { rows, cols } = getLinesToClear(cells);
-  highlightClearPreview(rows, cols);
+  if (rows.length > 0 || cols.length > 0) {
+    highlightClearPreview(rows, cols);
+  }
 }
 
 function getLinesToClear(cells) {
@@ -262,11 +348,22 @@ function highlightClearPreview(rows, cols) {
 function afterPlacement(blocksPlaced) {
   const clearResult = clearCompletedLines();
   const lines = clearResult.clearedRows.length + clearResult.clearedCols.length;
-  const gained = blocksPlaced + lines * 10;
+  const blocksScore = blocksPlaced * BLOCK_VALUE;
+  let lineScore = lines * LINE_CLEAR_BASE;
+  if (lines >= 2) {
+    lineScore *= lines;
+  }
+  let gained = blocksScore + lineScore;
+
   if (lines > 0) {
-    playClearSound();
     showHeadline();
   }
+
+  if (isBoardEmpty()) {
+    gained += ALL_CLEAR_BONUS;
+    showHeadline(ALL_CLEAR_HEADLINES[Math.floor(Math.random() * ALL_CLEAR_HEADLINES.length)]);
+  }
+
   updateScore(gained);
   if (currentPieces.every((p) => p === null)) {
     spawnPieces();
@@ -306,6 +403,7 @@ function clearCompletedLines() {
 }
 
 function checkGameOver() {
+  if (!gameStarted) return;
   const playable = currentPieces.some((piece) => piece && pieceFits(piece.shape));
   if (!playable) {
     showGameOver();
@@ -323,43 +421,74 @@ function pieceFits(shape) {
 
 function showGameOver() {
   finalScoreEl.textContent = `Você fez ${score} pontos.`;
+  if (finalBestScoreEl) {
+    finalBestScoreEl.textContent = bestScore;
+  }
   gameOverEl.classList.remove('hidden');
+  gameStarted = false;
 }
 
-function playClearSound() {
-  if (!clearSound) return;
-  clearSound.currentTime = 0;
-  clearSound.play();
+function showHeadline(text) {
+  const content = text || HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
+  if (headlineEl) {
+    headlineEl.textContent = content;
+    headlineEl.classList.remove('headline-animate');
+    // eslint-disable-next-line no-unused-expressions
+    headlineEl.offsetWidth;
+    headlineEl.classList.add('headline-animate');
+  }
+  if (headlineOverlay) {
+    headlineOverlay.textContent = content;
+    headlineOverlay.classList.remove('headline-overlay-animate');
+    // eslint-disable-next-line no-unused-expressions
+    headlineOverlay.offsetWidth;
+    headlineOverlay.classList.add('headline-overlay-animate');
+  }
 }
 
-function showHeadline() {
-  if (!headlineEl) return;
-  const text = HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
-  headlineEl.textContent = text;
-  headlineEl.classList.remove('headline-animate');
-  // Force reflow to restart animation
-  // eslint-disable-next-line no-unused-expressions
-  headlineEl.offsetWidth;
-  headlineEl.classList.add('headline-animate');
+function isBoardEmpty() {
+  return board.every((row) => row.every((cell) => cell === EMPTY));
 }
 
 function resetGame() {
   gameOverEl.classList.add('hidden');
+  startOverlay.classList.add('hidden');
   score = 0;
+  previousMilestone = 0;
   scoreEl.textContent = score;
+  themeIndex = 0;
+  applyTheme(THEMES[themeIndex]);
+  shapeBag = [];
   createBoard();
   spawnPieces();
+  gameStarted = true;
 }
 
 function addButtonEvents() {
   restartBtn.addEventListener('click', resetGame);
   playAgainBtn.addEventListener('click', resetGame);
+  startButton.addEventListener('click', resetGame);
+}
+
+function handleMilestone(oldScore, newScore) {
+  const oldMilestone = Math.floor(oldScore / 1000);
+  const newMilestone = Math.floor(newScore / 1000);
+  if (newMilestone > oldMilestone) {
+    themeIndex = (themeIndex + 1) % THEMES.length;
+    applyTheme(THEMES[themeIndex]);
+    if (clearSound) {
+      clearSound.currentTime = 0;
+      clearSound.play();
+    }
+  }
+  previousMilestone = newMilestone;
 }
 
 function init() {
+  document.title = 'Tetris do Thiago';
+  applyTheme(THEMES[themeIndex]);
   createBoard();
   loadBestScore();
-  spawnPieces();
   addButtonEvents();
 }
 
