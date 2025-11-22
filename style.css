@@ -25,6 +25,8 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 16px;
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -62,6 +64,12 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.ghost-btn:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 main {
