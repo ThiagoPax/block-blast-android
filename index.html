@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Jogo estilo Block Blast / 1010! para jogar direto no navegador." />
+  <meta name="theme-color" content="#111827" />
+  <title>Block Blast Web</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <div class="score-panel">
+        <div class="score-item">Pontuação: <span id="score">0</span></div>
+        <div class="score-item">Melhor: <span id="best-score">0</span></div>
+      </div>
+      <button id="restart" type="button" class="ghost-btn">Reiniciar</button>
+    </header>
+
+    <main>
+      <section class="board" id="board" aria-label="Tabuleiro 10x10"></section>
+      <section class="pieces" aria-label="Peças disponíveis">
+        <div class="pieces-title">Escolha e arraste uma peça</div>
+        <div id="piece-container" class="piece-container"></div>
+      </section>
+    </main>
+
+    <div id="game-over" class="game-over hidden">
+      <div class="game-over-card">
+        <h2>Game Over</h2>
+        <p id="final-score">Você fez 0 pontos.</p>
+        <button id="play-again" type="button">Jogar de novo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
