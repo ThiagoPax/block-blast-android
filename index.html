@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="app">
-    <header class="top-bar">
+    <header class="top-bar card">
       <div class="score-panel">
         <div class="score-item">Pontuação: <span id="score">0</span></div>
         <div class="score-item">Melhor: <span id="best-score">0</span></div>
@@ -20,9 +20,13 @@
 
     <div id="headline" aria-live="polite"></div>
 
-    <main>
-      <section class="board" id="board" aria-label="Tabuleiro 8x8"></section>
-      <section class="pieces" aria-label="Peças disponíveis">
+    <main class="stack">
+      <section class="card board-card" aria-label="Tabuleiro 8x8">
+        <div class="board-container">
+          <div class="board" id="board"></div>
+        </div>
+      </section>
+      <section class="card pieces" aria-label="Peças disponíveis">
         <div class="pieces-title">Escolha e arraste uma peça</div>
         <div id="piece-container" class="piece-container"></div>
       </section>
