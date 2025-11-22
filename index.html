@@ -18,8 +18,10 @@
       <button id="restart" type="button" class="ghost-btn">Reiniciar</button>
     </header>
 
-    <main>
-      <section class="board" id="board" aria-label="Tabuleiro 10x10"></section>
+    <div id="headline" aria-live="polite"></div>
+
+      <main>
+        <section class="board" id="board" aria-label="Tabuleiro 8x8"></section>
       <section class="pieces" aria-label="Peças disponíveis">
         <div class="pieces-title">Escolha e arraste uma peça</div>
         <div id="piece-container" class="piece-container"></div>
@@ -33,8 +35,10 @@
         <button id="play-again" type="button">Jogar de novo</button>
       </div>
     </div>
-  </div>
+    </div>
 
-  <script src="script.js"></script>
-</body>
+    <audio id="clear-sound" src="clear-sound.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+  </body>
 </html>
